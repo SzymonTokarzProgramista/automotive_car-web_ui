@@ -1,0 +1,141 @@
+{
+  "brand": {
+    "name": "Autonomous Control",
+    "landingSubtitle": "Konsola inżynierska",
+    "consoleSubtitle": "Konsola trasy pojazdu"
+  },
+  "common": {
+    "project": "Projekt",
+    "autonomyStack": "Stos autonomii",
+    "console": "Konsola",
+    "open": "Otwórz",
+    "login": "Logowanie",
+    "register": "Rejestracja",
+    "email": "Email",
+    "password": "Hasło",
+    "confirmPassword": "Potwierdź hasło",
+    "backToProject": "Wróć do projektu",
+    "notSelected": "Nie wybrano"
+  },
+  "status": {
+    "ready": "Gotowy",
+    "connected": "Połączono",
+    "connectionFailed": "Nie udało się połączyć",
+    "selectRoute": "Wybierz mapę, start i koniec",
+    "routeSaved": "Trasa zapisana",
+    "routeSaveFailed": "Nie udało się zapisać trasy"
+  },
+  "auth": {
+    "initialMessage": "Zaloguj się, aby otworzyć konsolę operatora.",
+    "loggingIn": "Logowanie...",
+    "creatingAccount": "Tworzenie konta...",
+    "passwordsDoNotMatch": "Hasła nie są takie same.",
+    "accountCreated": "Konto utworzone. Sprawdź email i potwierdź adres przed logowaniem.",
+    "invalidLogin": "Nieprawidłowe dane logowania albo backend jest niedostępny.",
+    "registrationFailed": "Rejestracja nie powiodła się.",
+    "emailVerified": "Email potwierdzony. Możesz się teraz zalogować.",
+    "emailVerificationFailed": "Weryfikacja emaila nie powiodła się albo link wygasł.",
+    "operatorAccess": "Dostęp operatora",
+    "showPassword": "Pokaż hasło",
+    "hidePassword": "Ukryj hasło",
+    "showConfirmPassword": "Pokaż potwierdzenie hasła",
+    "hideConfirmPassword": "Ukryj potwierdzenie hasła",
+    "loginToWorkspace": "Zaloguj do workspace"
+  },
+  "landing": {
+    "badge": "Platforma pojazdu autonomicznego oparta o RL",
+    "headline": "Trenuj, monitoruj i uruchamiaj polityki jazdy dla modelu pojazdu miejskiego.",
+    "description": "Od uczenia ze wzmocnieniem w symulacji po percepcję w czasie rzeczywistym i wykonanie trasy na fizycznym pojeździe.",
+    "openConsole": "Otwórz konsolę jazdy",
+    "systemOverview": "Zobacz stos autonomii",
+    "routeCaption": "Symulowana trasa miejska",
+    "cards": [
+      {
+        "title": "Percepcja w czasie rzeczywistym",
+        "text": "Podgląd kamery z detekcją pieszych, pasów ruchu, przeszkód i cech drogi wykorzystywanych przez stos jazdy."
+      },
+      {
+        "title": "Polityka jazdy RL",
+        "text": "Polityka uczenia ze wzmocnieniem trenowana w symulacji do wspierania skrętu, prędkości i lokalnych decyzji jazdy."
+      },
+      {
+        "title": "Wykonanie trasy miejskiej",
+        "text": "Nawigacja punkt-punkt po wybranej mapie miejskiej, łącząca cel globalny z lokalną kontrolą świadomą przeszkód."
+      },
+      {
+        "title": "Telemetria pojazdu",
+        "text": "Monitorowanie pozycji, stanu czujników, komend sterowania, statusu inferencji i zdrowia systemu."
+      }
+    ],
+    "flowEyebrow": "Przepływ projektu",
+    "flowTitle": "Od treningu w symulacji do autonomicznego wykonania trasy.",
+    "flow": [
+      {
+        "title": "Trening polityki w symulacji",
+        "text": "Wykorzystanie symulowanych scenariuszy miejskich do treningu i oceny agenta RL."
+      },
+      {
+        "title": "Wczytanie mapy i celu misji",
+        "text": "Wybór środowiska miejskiego oraz zdefiniowanie trasy z punktu A do punktu B."
+      },
+      {
+        "title": "Uruchomienie stosu percepcji",
+        "text": "Przetwarzanie obrazu z kamery w celu detekcji pieszych, pasów, przeszkód i kontekstu drogi."
+      },
+      {
+        "title": "Wykonanie autonomicznej jazdy",
+        "text": "Połączenie celu trasy, percepcji i wyjść polityki RL w komendy skrętu oraz prędkości."
+      },
+      {
+        "title": "Monitoring telemetrii i bezpieczeństwa",
+        "text": "Obserwacja stanu pojazdu, detekcji, sygnałów sterowania i warunków interwencji w czasie rzeczywistym."
+      }
+    ],
+    "authorEyebrow": "Autor",
+    "authorTitle": "O autorze",
+    "authorDescription": "Projekt został zaprojektowany i rozwijany przez Szymona Tokarza jako platforma inżynierska do eksperymentów z percepcją pojazdu autonomicznego, uczeniem ze wzmocnieniem, przejściem z symulacji do pojazdu fizycznego i sterowaniem w czasie rzeczywistym.",
+    "authorNote": "Platforma łączy modele AI, środowiska symulacyjne, moduły percepcji i logikę sterowania pojazdem w jeden eksperymentalny stos autonomii.",
+    "skills": [
+      "Systemy pojazdów autonomicznych",
+      "Uczenie ze wzmocnieniem w symulacji",
+      "Widzenie komputerowe dla percepcji drogi",
+      "Wdrożenia embedded i edge",
+      "Integracja oprogramowania robotycznego"
+    ],
+    "authorLinksLabel": "Placeholdery linków autora",
+    "authorLinks": ["GitHub", "LinkedIn", "Kontakt"],
+    "authorCards": [
+      {
+        "title": "AI i symulacja",
+        "text": "Trening i ocena polityk jazdy w symulowanych scenariuszach miejskich."
+      },
+      {
+        "title": "Stos percepcji",
+        "text": "Detekcja pieszych, pasów, przeszkód i kontekstu drogi na podstawie obrazu z kamery."
+      },
+      {
+        "title": "Integracja pojazdu",
+        "text": "Łączenie percepcji, komend sterowania, telemetrii i wdrożenia na fizycznym modelu auta."
+      }
+    ]
+  },
+  "console": {
+    "maps": "Mapy",
+    "currentRoute": "Aktualna trasa",
+    "map": "Mapa",
+    "start": "Start",
+    "finish": "Koniec",
+    "noRoute": "Brak zapisanej trasy dla tego użytkownika.",
+    "routePlanner": "Planer trasy",
+    "noMap": "Brak dostępnej mapy.",
+    "noMapsFound": "Nie znaleziono map.",
+    "saveRoute": "Zapisz trasę",
+    "camera": "Kamera",
+    "api": "API",
+    "mode": "Tryb",
+    "pickingStart": "Wybór startu",
+    "pickingFinish": "Wybór końca",
+    "clickToSet": "Kliknij, aby ustawić"
+  }
+}
+

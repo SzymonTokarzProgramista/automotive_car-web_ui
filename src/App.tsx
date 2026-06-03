@@ -9,6 +9,7 @@ import {
   LogOut,
   Map,
   Navigation,
+  Cpu,
   RadioTower,
   Route,
   Save,
@@ -17,29 +18,48 @@ import {
   Target,
 } from "lucide-react";
 import { api } from "./api";
+import { translations } from "./translations";
+import type { Language, Translation } from "./translations";
 import type { AppView, AuthMode, MapDefinition, PickMode, Point, RouteRead, User } from "./types";
 
 const TOKEN_STORAGE_KEY = "automotive_car_access_token";
+const LANGUAGE_STORAGE_KEY = "automotive_car_language";
+type StatusKey = keyof Translation["status"];
 
-function formatPoint(point: Point | null): string {
+function formatPoint(point: Point | null, notSelectedLabel: string): string {
   if (!point) {
-    return "Not selected";
+    return notSelectedLabel;
   }
   return `${point.x.toFixed(1)}, ${point.y.toFixed(1)}`;
 }
 
 export function App() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
+  const [language, setLanguage] = useState<Language>(() => {
+    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return storedLanguage === "polish" ? "polish" : "english";
+  });
+  const copy = translations[language];
+
+  function toggleLanguage() {
+    setLanguage((currentLanguage) => {
+      const nextLanguage = currentLanguage === "english" ? "polish" : "english";
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+      return nextLanguage;
+    });
+  }
+
   const [user, setUser] = useState<User | null>(null);
   const [view, setView] = useState<AppView>("home");
-  const [authMessage, setAuthMessage] = useState("Sign in to open the operator console.");
+  const [authMessage, setAuthMessage] = useState(copy.auth.initialMessage);
   const [maps, setMaps] = useState<MapDefinition[]>([]);
   const [selectedMapId, setSelectedMapId] = useState<string>("");
   const [currentRoute, setCurrentRoute] = useState<RouteRead | null>(null);
   const [start, setStart] = useState<Point | null>(null);
   const [end, setEnd] = useState<Point | null>(null);
   const [pickMode, setPickMode] = useState<PickMode>("start");
-  const [status, setStatus] = useState("Ready");
+  const [statusKey, setStatusKey] = useState<StatusKey>("ready");
+  const status = copy.status[statusKey];
   const [isBusy, setIsBusy] = useState(false);
 
   const selectedMap = useMemo(
@@ -74,12 +94,12 @@ export function App() {
         }
         setCurrentRoute(null);
       }
-      setStatus("Connected");
+      setStatusKey("connected");
     } catch (error) {
       if ((error as Error).name === "401") {
         clearSession();
       }
-      setStatus("Connection failed");
+      setStatusKey("connectionFailed");
     } finally {
       setIsBusy(false);
     }
@@ -101,15 +121,15 @@ export function App() {
       .verifyEmail(verificationToken)
       .then(() => {
         window.history.replaceState({}, "", window.location.pathname);
-        setAuthMessage("Email verified. You can now log in.");
+        setAuthMessage(copy.auth.emailVerified);
         setView("auth");
       })
       .catch(() => {
         window.history.replaceState({}, "", window.location.pathname);
-        setAuthMessage("Email verification failed or the link has expired.");
+        setAuthMessage(copy.auth.emailVerificationFailed);
         setView("auth");
       });
-  }, []);
+  }, [copy.auth.emailVerificationFailed, copy.auth.emailVerified]);
 
   async function handleAuth(accessToken: string) {
     localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
@@ -120,7 +140,7 @@ export function App() {
 
   async function saveRoute() {
     if (!token || !selectedMap || !start || !end) {
-      setStatus("Select map, start, and finish");
+      setStatusKey("selectRoute");
       return;
     }
 
@@ -128,27 +148,39 @@ export function App() {
       setIsBusy(true);
       const route = await api.saveRoute(token, selectedMap.map_id, start, end);
       setCurrentRoute(route);
-      setStatus("Route saved");
+      setStatusKey("routeSaved");
     } catch (error) {
       if ((error as Error).name === "401") {
         clearSession();
         return;
       }
-      setStatus("Route save failed");
+      setStatusKey("routeSaveFailed");
     } finally {
       setIsBusy(false);
     }
   }
 
   if (view === "auth") {
-    return <AuthScreen initialMessage={authMessage} onAuthenticated={handleAuth} onBackHome={() => setView("home")} />;
+    return (
+      <AuthScreen
+        copy={copy}
+        language={language}
+        initialMessage={authMessage}
+        onAuthenticated={handleAuth}
+        onBackHome={() => setView("home")}
+        onToggleLanguage={toggleLanguage}
+      />
+    );
   }
 
   if (view !== "console") {
     return (
       <LandingPage
+        copy={copy}
+        language={language}
         user={user}
         onLogin={() => setView("auth")}
+        onToggleLanguage={toggleLanguage}
         onOpenConsole={() => {
           if (token && user) {
             setView("console");
@@ -161,12 +193,23 @@ export function App() {
   }
 
   if (!token || !user) {
-    return <AuthScreen initialMessage={authMessage} onAuthenticated={handleAuth} onBackHome={() => setView("home")} />;
+    return (
+      <AuthScreen
+        copy={copy}
+        language={language}
+        initialMessage={authMessage}
+        onAuthenticated={handleAuth}
+        onBackHome={() => setView("home")}
+        onToggleLanguage={toggleLanguage}
+      />
+    );
   }
 
   return (
     <OperatorConsole
       token={token}
+      copy={copy}
+      language={language}
       user={user}
       maps={maps}
       selectedMap={selectedMap}
@@ -179,6 +222,7 @@ export function App() {
       isBusy={isBusy}
       onBackHome={() => setView("home")}
       onLogout={clearSession}
+      onToggleLanguage={toggleLanguage}
       onSelectMap={(mapId) => {
         setSelectedMapId(mapId);
         setStart(null);
@@ -199,35 +243,76 @@ export function App() {
 }
 
 function LandingPage({
+  copy,
+  language,
   user,
   onLogin,
   onOpenConsole,
+  onToggleLanguage,
 }: {
+  copy: Translation;
+  language: Language;
   user: User | null;
   onLogin: () => void;
   onOpenConsole: () => void;
+  onToggleLanguage: () => void;
 }) {
+  useEffect(() => {
+    const revealElements = Array.from(document.querySelectorAll<HTMLElement>(".reveal-section"));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+          }
+        });
+      },
+      { threshold: 0.18 },
+    );
+
+    revealElements.forEach((element) => observer.observe(element));
+
+    function updateScrollProgress() {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+      document.documentElement.style.setProperty("--scroll-progress", `${Math.min(progress, 1)}`);
+    }
+
+    updateScrollProgress();
+    window.addEventListener("scroll", updateScrollProgress, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", updateScrollProgress);
+      document.documentElement.style.removeProperty("--scroll-progress");
+    };
+  }, []);
+
   return (
     <main className="landing-shell">
+      <div className="scroll-progress" aria-hidden="true" />
       <nav className="landing-nav">
         <div className="brand">
           <div className="brand-mark">
             <RadioTower size={22} />
           </div>
           <div>
-            <strong>Autonomous Control</strong>
-            <span>Engineering console</span>
+            <strong>{copy.brand.name}</strong>
+            <span>{copy.brand.landingSubtitle}</span>
           </div>
         </div>
         <div className="landing-menu">
-          <a href="#project">Project</a>
-          <a href="#system">Autonomy Stack</a>
+          <a href="#project">{copy.common.project}</a>
+          <a href="#system">{copy.common.autonomyStack}</a>
           <button className="nav-link" type="button" onClick={onOpenConsole}>
-            Console
+            {copy.common.console}
+          </button>
+          <button className="language-toggle" type="button" onClick={onToggleLanguage}>
+            {language === "english" ? "PL" : "EN"}
           </button>
           <button className="login-chip" type="button" onClick={user ? onOpenConsole : onLogin}>
             {user ? <ShieldCheck size={16} /> : <LogIn size={16} />}
-            {user ? "Open" : "Login to Workspace"}
+            {user ? copy.common.open : copy.auth.loginToWorkspace}
           </button>
         </div>
       </nav>
@@ -236,26 +321,23 @@ function LandingPage({
         <div className="hero-copy">
           <span className="eyebrow">
             <Sparkles size={16} />
-            RL-based autonomous vehicle platform
+            {copy.landing.badge}
           </span>
-          <h1>Train, monitor, and deploy autonomous driving policies for a model urban vehicle.</h1>
-          <p>
-            From reinforcement learning in simulation to real-time perception and route execution
-            on the physical vehicle.
-          </p>
+          <h1>{copy.landing.headline}</h1>
+          <p>{copy.landing.description}</p>
           <div className="hero-actions">
             <button className="primary-action" type="button" onClick={onOpenConsole}>
               <Navigation size={18} />
-              Open Driving Console
+              {copy.landing.openConsole}
             </button>
             <a className="secondary-action" href="#system">
-              View Autonomy Stack
+              {copy.landing.systemOverview}
             </a>
           </div>
         </div>
         <div className="hero-visual" aria-hidden="true">
           <div className="visual-grid" />
-          <span className="route-caption">Simulated urban route</span>
+          <span className="route-caption">{copy.landing.routeCaption}</span>
           <div className="visual-car">
             <Navigation size={42} />
           </div>
@@ -270,68 +352,70 @@ function LandingPage({
       </section>
 
       <section className="info-band reveal-section" id="system">
-        <article>
-          <Camera size={22} />
-          <h2>Real-time Perception</h2>
-          <p>Live camera stream with pedestrian, lane, obstacle, and road-feature detection used by the driving stack.</p>
-        </article>
-        <article>
-          <Route size={22} />
-          <h2>RL Driving Policy</h2>
-          <p>Reinforcement learning policy trained in simulation to support steering, speed control, and local driving decisions.</p>
-        </article>
-        <article>
-          <Target size={22} />
-          <h2>Urban Route Execution</h2>
-          <p>Point-to-point navigation through a selected urban map, combining global route goals with local obstacle-aware control.</p>
-        </article>
-        <article>
-          <RadioTower size={22} />
-          <h2>Vehicle Telemetry</h2>
-          <p>Runtime monitoring of position, sensor state, control commands, inference status, and system health.</p>
-        </article>
+        {copy.landing.cards.map((card, index) => {
+          const Icon = [Camera, Route, Target, RadioTower][index];
+          return (
+            <article key={card.title}>
+              <Icon size={22} />
+              <h2>{card.title}</h2>
+              <p>{card.text}</p>
+            </article>
+          );
+        })}
       </section>
 
       <section className="story-section reveal-section">
         <div>
-          <span className="eyebrow">Project Flow</span>
-          <h2>From simulated training to autonomous route execution.</h2>
+          <span className="eyebrow">{copy.landing.flowEyebrow}</span>
+          <h2>{copy.landing.flowTitle}</h2>
         </div>
         <div className="timeline">
-          <div>
-            <strong>01</strong>
-            <span>
-              <b>Train policy in simulation</b>
-              Use simulated urban scenarios to train and evaluate the RL driving agent.
-            </span>
+          {copy.landing.flow.map((step, index) => (
+            <div key={step.title}>
+              <strong>{String(index + 1).padStart(2, "0")}</strong>
+              <span>
+                <b>{step.title}</b>
+                {step.text}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="author-section reveal-section">
+        <div className="author-header">
+          <div className="author-mark">
+            <Cpu size={28} />
           </div>
           <div>
-            <strong>02</strong>
-            <span>
-              <b>Load map and mission goal</b>
-              Select an urban environment and define the target route from point A to point B.
-            </span>
+            <span className="eyebrow">{copy.landing.authorEyebrow}</span>
+            <h2>{copy.landing.authorTitle}</h2>
+            <p>{copy.landing.authorDescription}</p>
           </div>
-          <div>
-            <strong>03</strong>
-            <span>
-              <b>Run perception stack</b>
-              Process camera input to detect pedestrians, lanes, obstacles, and road context.
-            </span>
+        </div>
+
+        <div className="author-body">
+          <div className="author-note">
+            <p>{copy.landing.authorNote}</p>
+            <ul className="skill-list">
+              {copy.landing.skills.map((skill) => (
+                <li key={skill}>{skill}</li>
+              ))}
+            </ul>
+            <div className="author-links" aria-label={copy.landing.authorLinksLabel}>
+              {copy.landing.authorLinks.map((linkLabel) => (
+                <span key={linkLabel}>{linkLabel}</span>
+              ))}
+            </div>
           </div>
-          <div>
-            <strong>04</strong>
-            <span>
-              <b>Execute autonomous drive</b>
-              Combine route intent, perception, and RL policy outputs into steering and speed commands.
-            </span>
-          </div>
-          <div>
-            <strong>05</strong>
-            <span>
-              <b>Monitor telemetry and safety</b>
-              Observe vehicle state, detections, control signals, and intervention conditions in real time.
-            </span>
+
+          <div className="author-cards">
+            {copy.landing.authorCards.map((card) => (
+              <article key={card.title}>
+                <h3>{card.title}</h3>
+                <p>{card.text}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -341,6 +425,8 @@ function LandingPage({
 
 function OperatorConsole({
   token,
+  copy,
+  language,
   user,
   maps,
   selectedMap,
@@ -352,12 +438,15 @@ function OperatorConsole({
   isBusy,
   onBackHome,
   onLogout,
+  onToggleLanguage,
   onSelectMap,
   onPickMode,
   onPickPoint,
   onSaveRoute,
 }: {
   token: string;
+  copy: Translation;
+  language: Language;
   user: User;
   maps: MapDefinition[];
   selectedMap: MapDefinition | undefined;
@@ -370,6 +459,7 @@ function OperatorConsole({
   isBusy: boolean;
   onBackHome: () => void;
   onLogout: () => void;
+  onToggleLanguage: () => void;
   onSelectMap: (mapId: string) => void;
   onPickMode: (mode: PickMode) => void;
   onPickPoint: (point: Point) => void;
@@ -383,8 +473,8 @@ function OperatorConsole({
             <RadioTower size={22} />
           </div>
           <div>
-            <strong>Autonomous Control</strong>
-            <span>Vehicle route console</span>
+            <strong>{copy.brand.name}</strong>
+            <span>{copy.brand.consoleSubtitle}</span>
           </div>
         </button>
 
@@ -397,6 +487,9 @@ function OperatorConsole({
             <ShieldCheck size={16} />
             {user.email}
           </span>
+          <button className="language-toggle" type="button" onClick={onToggleLanguage}>
+            {language === "english" ? "PL" : "EN"}
+          </button>
           <button className="icon-button" type="button" onClick={onLogout} aria-label="Log out">
             <LogOut size={18} />
           </button>
@@ -407,7 +500,7 @@ function OperatorConsole({
         <aside className="panel sidebar">
           <div className="section-title">
             <Map size={18} />
-            <h2>Maps</h2>
+            <h2>{copy.console.maps}</h2>
           </div>
           <div className="map-list">
             {maps.map((mapItem) => (
@@ -428,19 +521,19 @@ function OperatorConsole({
           <div className="route-card">
             <div className="section-title">
               <Route size={18} />
-              <h2>Current Route</h2>
+              <h2>{copy.console.currentRoute}</h2>
             </div>
             {currentRoute ? (
               <dl className="route-data">
-                <dt>Map</dt>
+                <dt>{copy.console.map}</dt>
                 <dd>{currentRoute.map_id}</dd>
-                <dt>Start</dt>
-                <dd>{formatPoint(currentRoute.start)}</dd>
-                <dt>Finish</dt>
-                <dd>{formatPoint(currentRoute.end)}</dd>
+                <dt>{copy.console.start}</dt>
+                <dd>{formatPoint(currentRoute.start, copy.common.notSelected)}</dd>
+                <dt>{copy.console.finish}</dt>
+                <dd>{formatPoint(currentRoute.end, copy.common.notSelected)}</dd>
               </dl>
             ) : (
-              <p className="muted">No route saved for this user.</p>
+              <p className="muted">{copy.console.noRoute}</p>
             )}
           </div>
         </aside>
@@ -450,23 +543,24 @@ function OperatorConsole({
             <div>
               <div className="section-title">
                 <Target size={18} />
-                <h2>Route Planner</h2>
+                <h2>{copy.console.routePlanner}</h2>
               </div>
-              <p>{selectedMap?.description ?? "No map available."}</p>
+              <p>{selectedMap?.description ?? copy.console.noMap}</p>
             </div>
             <div className={`segmented choice-tabs ${pickMode}`}>
               <span className="choice-indicator" />
               <button className={pickMode === "start" ? "active" : ""} type="button" onClick={() => onPickMode("start")}>
-                Start
+                {copy.console.start}
               </button>
               <button className={pickMode === "end" ? "active" : ""} type="button" onClick={() => onPickMode("end")}>
-                Finish
+                {copy.console.finish}
               </button>
             </div>
           </div>
 
           {selectedMap ? (
             <RouteMap
+              copy={copy}
               mapDefinition={selectedMap}
               start={start}
               end={end}
@@ -474,15 +568,15 @@ function OperatorConsole({
               onPick={onPickPoint}
             />
           ) : (
-            <div className="empty-state">No maps found.</div>
+            <div className="empty-state">{copy.console.noMapsFound}</div>
           )}
 
           <div className="planner-footer">
-            <Metric label="Start" value={formatPoint(start)} />
-            <Metric label="Finish" value={formatPoint(end)} />
+            <Metric label={copy.console.start} value={formatPoint(start, copy.common.notSelected)} />
+            <Metric label={copy.console.finish} value={formatPoint(end, copy.common.notSelected)} />
             <button className="primary-action" type="button" onClick={onSaveRoute} disabled={isBusy || !start || !end}>
               <Save size={18} />
-              Save Route
+              {copy.console.saveRoute}
             </button>
           </div>
         </section>
@@ -490,15 +584,15 @@ function OperatorConsole({
         <aside className="panel camera-panel">
           <div className="section-title">
             <Camera size={18} />
-            <h2>Camera</h2>
+            <h2>{copy.console.camera}</h2>
           </div>
           <div className="camera-frame">
             <img src={api.cameraUrl(token)} alt="Vehicle camera stream" />
             <div className="scanline" />
           </div>
           <div className="telemetry">
-            <Metric label="API" value={api.apiUrl} />
-            <Metric label="Mode" value={pickMode === "start" ? "Picking start" : "Picking finish"} />
+            <Metric label={copy.console.api} value={api.apiUrl} />
+            <Metric label={copy.console.mode} value={pickMode === "start" ? copy.console.pickingStart : copy.console.pickingFinish} />
           </div>
         </aside>
       </section>
@@ -507,13 +601,19 @@ function OperatorConsole({
 }
 
 function AuthScreen({
+  copy,
+  language,
   initialMessage,
   onAuthenticated,
   onBackHome,
+  onToggleLanguage,
 }: {
+  copy: Translation;
+  language: Language;
   initialMessage: string;
   onAuthenticated: (token: string) => Promise<void>;
   onBackHome: () => void;
+  onToggleLanguage: () => void;
 }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("driver@example.com");
@@ -527,24 +627,24 @@ function AuthScreen({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (mode === "register" && password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+      setMessage(copy.auth.passwordsDoNotMatch);
       return;
     }
 
     setIsBusy(true);
-    setMessage(mode === "login" ? "Logging in..." : "Creating account...");
+    setMessage(mode === "login" ? copy.auth.loggingIn : copy.auth.creatingAccount);
 
     try {
       if (mode === "register") {
         await api.register(email, password);
-        setMessage("Account created. Check your email and confirm the address before logging in.");
+        setMessage(copy.auth.accountCreated);
         setMode("login");
         return;
       }
       const tokenResponse = await api.login(email, password);
       await onAuthenticated(tokenResponse.access_token);
     } catch {
-      setMessage(mode === "login" ? "Invalid credentials or backend unavailable." : "Registration failed.");
+      setMessage(mode === "login" ? copy.auth.invalidLogin : copy.auth.registrationFailed);
     } finally {
       setIsBusy(false);
     }
@@ -553,7 +653,7 @@ function AuthScreen({
   return (
     <main className="auth-shell">
       <button className="auth-back" type="button" onClick={onBackHome}>
-        Back to project
+        {copy.common.backToProject}
       </button>
       <form className="auth-panel" onSubmit={submit}>
         <div className="brand auth-brand">
@@ -561,27 +661,31 @@ function AuthScreen({
             <Navigation size={24} />
           </div>
           <div>
-            <strong>Autonomous Control</strong>
-            <span>Operator access</span>
+            <strong>{copy.brand.name}</strong>
+            <span>{copy.auth.operatorAccess}</span>
           </div>
         </div>
+
+        <button className="language-toggle auth-language-toggle" type="button" onClick={onToggleLanguage}>
+          {language === "english" ? "PL" : "EN"}
+        </button>
 
         <div className={`auth-tabs choice-tabs ${mode}`}>
           <span className="choice-indicator" />
           <button className={mode === "login" ? "active" : ""} type="button" onClick={() => setMode("login")}>
-            Login
+            {copy.common.login}
           </button>
           <button className={mode === "register" ? "active" : ""} type="button" onClick={() => setMode("register")}>
-            Register
+            {copy.common.register}
           </button>
         </div>
 
         <label>
-          Email
+          {copy.common.email}
           <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         </label>
         <label>
-          Password
+          {copy.common.password}
           <span className="password-control">
             <input
               type={showPassword ? "text" : "password"}
@@ -594,7 +698,7 @@ function AuthScreen({
               className="password-toggle"
               type="button"
               onClick={() => setShowPassword((current) => !current)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? copy.auth.hidePassword : copy.auth.showPassword}
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -603,7 +707,7 @@ function AuthScreen({
 
         <div className={`confirm-password ${mode === "register" ? "visible" : ""}`} aria-hidden={mode !== "register"}>
           <label>
-            Confirm password
+            {copy.common.confirmPassword}
             <span className="password-control">
               <input
                 type={showConfirmPassword ? "text" : "password"}
@@ -618,7 +722,7 @@ function AuthScreen({
                 type="button"
                 onClick={() => setShowConfirmPassword((current) => !current)}
                 tabIndex={mode === "register" ? 0 : -1}
-                aria-label={showConfirmPassword ? "Hide confirmed password" : "Show confirmed password"}
+                aria-label={showConfirmPassword ? copy.auth.hideConfirmPassword : copy.auth.showConfirmPassword}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -628,7 +732,7 @@ function AuthScreen({
 
         <button className="primary-action wide" type="submit" disabled={isBusy}>
           <LogIn size={18} />
-          {mode === "login" ? "Login" : "Register"}
+          {mode === "login" ? copy.common.login : copy.common.register}
         </button>
 
         <p className="muted">{message}</p>
@@ -638,12 +742,14 @@ function AuthScreen({
 }
 
 function RouteMap({
+  copy,
   mapDefinition,
   start,
   end,
   pickMode,
   onPick,
 }: {
+  copy: Translation;
   mapDefinition: MapDefinition;
   start: Point | null;
   end: Point | null;
@@ -682,7 +788,7 @@ function RouteMap({
       {end && <Marker point={end} mapDefinition={mapDefinition} kind="end" />}
       <div className="map-hint">
         <CircleDot size={16} />
-        Click to set {pickMode}
+        {copy.console.clickToSet} {pickMode === "start" ? copy.console.start : copy.console.finish}
       </div>
     </div>
   );

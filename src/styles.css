@@ -4,6 +4,7 @@
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #050806;
   color: #e7f7eb;
+  --scroll-progress: 0;
 }
 
 * {
@@ -497,7 +498,8 @@ button {
 .secondary-action,
 .login-chip,
 .nav-link,
-.auth-back {
+.auth-back,
+.language-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -519,7 +521,8 @@ button {
 .secondary-action:hover,
 .login-chip:hover,
 .nav-link:hover,
-.auth-back:hover {
+.auth-back:hover,
+.language-toggle:hover {
   transform: translateY(-1px);
   border-color: rgba(57, 255, 136, 0.68);
   color: #39ff88;
@@ -528,6 +531,11 @@ button {
 .login-chip {
   background: #1bd66a;
   color: #031006;
+  font-weight: 800;
+}
+
+.language-toggle {
+  min-width: 44px;
   font-weight: 800;
 }
 
@@ -597,6 +605,10 @@ button {
 
 .auth-brand {
   margin-bottom: 4px;
+}
+
+.auth-language-toggle {
+  justify-self: end;
 }
 
 .auth-panel label {
@@ -689,6 +701,17 @@ button {
 .landing-shell {
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  width: calc(var(--scroll-progress) * 100%);
+  height: 3px;
+  background: linear-gradient(90deg, #39ff88, #d8ff5a);
+  box-shadow: 0 0 18px rgba(57, 255, 136, 0.48);
 }
 
 .landing-nav {
@@ -905,7 +928,8 @@ button {
 }
 
 .info-band,
-.story-section {
+.story-section,
+.author-section {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto 70px;
 }
@@ -917,7 +941,8 @@ button {
 }
 
 .info-band article,
-.story-section {
+.story-section,
+.author-section {
   border: 1px solid rgba(57, 255, 136, 0.16);
   border-radius: 8px;
   background: rgba(9, 15, 11, 0.86);
@@ -929,6 +954,29 @@ button {
   gap: 12px;
   min-height: 210px;
   padding: 20px;
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease,
+    border-color 180ms ease;
+}
+
+.info-band.is-visible article {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.info-band.is-visible article:nth-child(2) {
+  transition-delay: 90ms;
+}
+
+.info-band.is-visible article:nth-child(3) {
+  transition-delay: 180ms;
+}
+
+.info-band.is-visible article:nth-child(4) {
+  transition-delay: 270ms;
 }
 
 .info-band svg {
@@ -936,13 +984,18 @@ button {
 }
 
 .info-band h2,
-.story-section h2 {
+.story-section h2,
+.author-section h2,
+.author-cards h3 {
   margin: 0;
   letter-spacing: 0;
 }
 
 .info-band p,
-.timeline span {
+.timeline span,
+.author-header p,
+.author-note p,
+.author-cards p {
   display: grid;
   gap: 4px;
   margin: 0;
@@ -976,9 +1029,33 @@ button {
   border: 1px solid rgba(143, 168, 152, 0.14);
   border-radius: 8px;
   background: #0c120e;
+  opacity: 0;
+  transform: translateY(16px);
   transition:
+    opacity 520ms ease,
     border-color 180ms ease,
-    transform 180ms ease;
+    transform 520ms ease;
+}
+
+.story-section.is-visible .timeline div {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.story-section.is-visible .timeline div:nth-child(2) {
+  transition-delay: 80ms;
+}
+
+.story-section.is-visible .timeline div:nth-child(3) {
+  transition-delay: 160ms;
+}
+
+.story-section.is-visible .timeline div:nth-child(4) {
+  transition-delay: 240ms;
+}
+
+.story-section.is-visible .timeline div:nth-child(5) {
+  transition-delay: 320ms;
 }
 
 .timeline div:hover {
@@ -990,10 +1067,150 @@ button {
   color: #39ff88;
 }
 
+.author-section {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+}
+
+.author-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.author-mark {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(57, 255, 136, 0.3);
+  border-radius: 8px;
+  background: #102016;
+  color: #39ff88;
+  box-shadow: 0 0 28px rgba(57, 255, 136, 0.12);
+}
+
+.author-header > div:last-child {
+  display: grid;
+  gap: 12px;
+}
+
+.author-body {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.15fr);
+  gap: 18px;
+}
+
+.author-note,
+.author-cards article {
+  border: 1px solid rgba(143, 168, 152, 0.14);
+  border-radius: 8px;
+  background: #0c120e;
+}
+
+.author-note {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.skill-list li,
+.author-links span {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  padding: 6px 9px;
+  border: 1px solid rgba(57, 255, 136, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 12, 9, 0.82);
+  color: #c4f8d2;
+}
+
+.author-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.author-links span {
+  color: #8fa898;
+}
+
+.author-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.author-cards article {
+  display: grid;
+  gap: 10px;
+  min-height: 170px;
+  padding: 16px;
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 520ms ease,
+    border-color 180ms ease,
+    transform 520ms ease;
+}
+
+.author-section.is-visible .author-cards article {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.author-section.is-visible .author-cards article:nth-child(2) {
+  transition-delay: 100ms;
+}
+
+.author-section.is-visible .author-cards article:nth-child(3) {
+  transition-delay: 200ms;
+}
+
+.author-cards article:hover {
+  transform: translateY(-2px);
+  border-color: rgba(57, 255, 136, 0.4);
+}
+
+.author-cards h3 {
+  color: #e7f7eb;
+  font-size: 16px;
+}
+
 .reveal-section {
-  animation: reveal-up 720ms ease both;
-  animation-timeline: view();
-  animation-range: entry 0% cover 34%;
+  opacity: 0;
+  transform: translateY(38px) scale(0.985);
+  filter: blur(8px);
+  transition:
+    opacity 720ms ease,
+    transform 720ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 720ms ease;
+}
+
+.reveal-section.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+.hero-section.reveal-section {
+  transition-duration: 900ms;
+}
+
+.hero-section.is-visible .hero-visual {
+  animation: hero-float-in 980ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 @media (max-width: 1180px) {
@@ -1050,8 +1267,15 @@ button {
     width: min(100% - 24px, 1180px);
   }
 
-  .story-section {
+  .story-section,
+  .author-section {
     width: min(100% - 24px, 1180px);
+  }
+
+  .author-header,
+  .author-body,
+  .author-cards {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1124,6 +1348,18 @@ button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes hero-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) rotateX(8deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) rotateX(0);
   }
 }
 

@@ -1,0 +1,141 @@
+{
+  "brand": {
+    "name": "Autonomous Control",
+    "landingSubtitle": "Engineering console",
+    "consoleSubtitle": "Vehicle route console"
+  },
+  "common": {
+    "project": "Project",
+    "autonomyStack": "Autonomy Stack",
+    "console": "Console",
+    "open": "Open",
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "backToProject": "Back to project",
+    "notSelected": "Not selected"
+  },
+  "status": {
+    "ready": "Ready",
+    "connected": "Connected",
+    "connectionFailed": "Connection failed",
+    "selectRoute": "Select map, start, and finish",
+    "routeSaved": "Route saved",
+    "routeSaveFailed": "Route save failed"
+  },
+  "auth": {
+    "initialMessage": "Sign in to open the operator console.",
+    "loggingIn": "Logging in...",
+    "creatingAccount": "Creating account...",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "accountCreated": "Account created. Check your email and confirm the address before logging in.",
+    "invalidLogin": "Invalid credentials or backend unavailable.",
+    "registrationFailed": "Registration failed.",
+    "emailVerified": "Email verified. You can now log in.",
+    "emailVerificationFailed": "Email verification failed or the link has expired.",
+    "operatorAccess": "Operator access",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "showConfirmPassword": "Show confirmed password",
+    "hideConfirmPassword": "Hide confirmed password",
+    "loginToWorkspace": "Login to Workspace"
+  },
+  "landing": {
+    "badge": "RL-based autonomous vehicle platform",
+    "headline": "Train, monitor, and deploy autonomous driving policies for a model urban vehicle.",
+    "description": "From reinforcement learning in simulation to real-time perception and route execution on the physical vehicle.",
+    "openConsole": "Open Driving Console",
+    "systemOverview": "View Autonomy Stack",
+    "routeCaption": "Simulated urban route",
+    "cards": [
+      {
+        "title": "Real-time Perception",
+        "text": "Live camera stream with pedestrian, lane, obstacle, and road-feature detection used by the driving stack."
+      },
+      {
+        "title": "RL Driving Policy",
+        "text": "Reinforcement learning policy trained in simulation to support steering, speed control, and local driving decisions."
+      },
+      {
+        "title": "Urban Route Execution",
+        "text": "Point-to-point navigation through a selected urban map, combining global route goals with local obstacle-aware control."
+      },
+      {
+        "title": "Vehicle Telemetry",
+        "text": "Runtime monitoring of position, sensor state, control commands, inference status, and system health."
+      }
+    ],
+    "flowEyebrow": "Project Flow",
+    "flowTitle": "From simulated training to autonomous route execution.",
+    "flow": [
+      {
+        "title": "Train policy in simulation",
+        "text": "Use simulated urban scenarios to train and evaluate the RL driving agent."
+      },
+      {
+        "title": "Load map and mission goal",
+        "text": "Select an urban environment and define the target route from point A to point B."
+      },
+      {
+        "title": "Run perception stack",
+        "text": "Process camera input to detect pedestrians, lanes, obstacles, and road context."
+      },
+      {
+        "title": "Execute autonomous drive",
+        "text": "Combine route intent, perception, and RL policy outputs into steering and speed commands."
+      },
+      {
+        "title": "Monitor telemetry and safety",
+        "text": "Observe vehicle state, detections, control signals, and intervention conditions in real time."
+      }
+    ],
+    "authorEyebrow": "Author",
+    "authorTitle": "About the Author",
+    "authorDescription": "This project was designed and developed by Szymon Tokarz as an engineering platform for experimenting with autonomous vehicle perception, reinforcement learning, simulation-to-real deployment, and real-time vehicle control.",
+    "authorNote": "The platform connects AI models, simulation environments, perception modules, and vehicle control logic into one experimental autonomy stack.",
+    "skills": [
+      "Autonomous vehicle systems",
+      "Reinforcement learning in simulation",
+      "Computer vision for road perception",
+      "Embedded and edge deployment",
+      "Robotics software integration"
+    ],
+    "authorLinksLabel": "Author links placeholders",
+    "authorLinks": ["GitHub", "LinkedIn", "Contact"],
+    "authorCards": [
+      {
+        "title": "AI & Simulation",
+        "text": "Training and evaluating driving policies in simulated urban scenarios."
+      },
+      {
+        "title": "Perception Stack",
+        "text": "Detecting pedestrians, lanes, obstacles, and road context from camera input."
+      },
+      {
+        "title": "Vehicle Integration",
+        "text": "Connecting perception, control commands, telemetry, and physical model-car deployment."
+      }
+    ]
+  },
+  "console": {
+    "maps": "Maps",
+    "currentRoute": "Current Route",
+    "map": "Map",
+    "start": "Start",
+    "finish": "Finish",
+    "noRoute": "No route saved for this user.",
+    "routePlanner": "Route Planner",
+    "noMap": "No map available.",
+    "noMapsFound": "No maps found.",
+    "saveRoute": "Save Route",
+    "camera": "Camera",
+    "api": "API",
+    "mode": "Mode",
+    "pickingStart": "Picking start",
+    "pickingFinish": "Picking finish",
+    "clickToSet": "Click to set"
+  }
+}
+
